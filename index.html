@@ -1,579 +1,568 @@
 <!DOCTYPE html>
-<html lang="hr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Rijeka CityCard mobility</title>
-<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<title>Pocket Duel</title>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
     margin: 0; padding: 0;
     height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: #fff;
-    color: #222;
+    background: #1b1f24;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
   }
-  .app {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    max-width: 480px;
-    margin: 0 auto;
+  .game {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    height: 100vh;
+    max-width: 720px;
+    margin: 0 auto;
   }
 
-  /* Header */
-  .header {
-    position: relative;
-    padding: 14px 16px 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .back {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #777;
-    font-size: 22px;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #9aa1a8;
-    font-size: 12px;
-    line-height: 1.05;
-  }
-  .logo-circle {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 2px solid #b4bac0;
-    position: relative;
-  }
-  .logo-circle::after {
-    content: "";
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 6px; height: 6px;
-    background: #b4bac0;
-    border-radius: 50%;
-  }
-  .logo-text { font-weight: 500; }
-
-  .title {
-    text-align: center;
-    font-size: 26px;
-    color: #2b2b2b;
-    margin: 14px 0 18px;
-    font-weight: 500;
-  }
-
-  .timer-label {
-    text-align: center;
-    color: #8a8f95;
-    font-size: 15px;
-    margin-bottom: 4px;
-  }
-  .timer {
-    text-align: center;
-    color: #2ea043;
-    font-size: 46px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
-
-  .progress-wrap {
-    margin: 14px 16px 0;
-    height: 5px;
-    background: #eef0f2;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .progress-bar {
-    height: 100%;
-    width: 35%;
-    background: #2ea043;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-
-  .info {
-    margin: 18px 16px 0;
-    border-bottom: 1px solid #e6e8eb;
-    padding-bottom: 14px;
-  }
-  .info-row {
+  .hud {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
-    padding: 4px 0;
-  }
-  .info-row .k { color: #8a8f95; }
-  .info-row .v { color: #2b2b2b; font-weight: 500; }
-
-  .zones-label {
-    margin: 16px 16px 10px;
-    color: #8a8f95;
-    font-size: 14px;
-  }
-  .zones {
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
+    padding: 8px 12px;
+    background: #14181d;
+    font-size: 13px;
     gap: 8px;
-    margin: 0 16px;
-    flex-wrap: wrap;
   }
-  .zone {
-    flex: 1 1 0;
-    text-align: center;
-    background: #f29032;
-    color: #fff;
-    border-radius: 8px;
-    padding: 8px 4px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.05);
-  }
-
-  .spacer { flex: 1; }
-
-  /* Bottom banner */
-  .banner {
-    position: relative;
-    height: 90px;
-    margin: 0 0 8px;
+  .hud .side { flex: 1; }
+  .hud .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .hud .p1 .name { color: #4cc1ff; }
+  .hud .p2 .name { color: #ff7a59; }
+  .hud .right { text-align: right; }
+  .hp-wrap {
+    width: 100%;
+    height: 8px;
+    background: #2a2f36;
+    border-radius: 4px;
     overflow: hidden;
   }
-  .banner-orange {
-    position: absolute;
-    inset: 0;
-    background: #f29032;
-    clip-path: polygon(0 0, 60% 0, 40% 100%, 0 100%);
+  .hp-bar {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.3s ease;
   }
-  .banner-blue {
-    position: absolute;
-    inset: 0;
-    background: #2bb6e0;
-    clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
-  }
-  .banner-time {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.45);
-    color: #fff;
-    font-size: 22px;
-    font-weight: 600;
-    padding: 6px 16px;
-    border-radius: 18px;
-    letter-spacing: 1px;
-  }
-  .banner-brand {
-    position: absolute;
-    right: 14px; bottom: 8px;
-    color: #fff;
-    font-style: italic;
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: 0.5px;
+  .turn-indicator {
+    text-align: center;
+    padding: 4px;
+    font-size: 12px;
+    background: #14181d;
+    color: #ffd54f;
+    border-top: 1px solid #2a2f36;
   }
 
-  .qr-button {
-    margin: 0;
-    border: none;
-    background: #f29032;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 16px;
+  canvas {
+    display: block;
     width: 100%;
-    cursor: pointer;
+    flex: 1;
+    background: linear-gradient(#5fb3ff 0%, #a3d5ff 100%);
+    touch-action: none;
+  }
+
+  .controls {
+    background: #14181d;
+    padding: 10px 12px 14px;
+    border-top: 1px solid #2a2f36;
+  }
+  .ctrl-row {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
+    margin-bottom: 8px;
   }
-  .qr-button:active { background: #d97c1f; }
-  .qr-icon {
-    width: 20px; height: 20px;
-    display: inline-block;
-    background:
-      linear-gradient(#fff,#fff) 0 0 / 6px 6px no-repeat,
-      linear-gradient(#fff,#fff) 14px 0 / 6px 6px no-repeat,
-      linear-gradient(#fff,#fff) 0 14px / 6px 6px no-repeat,
-      linear-gradient(#fff,#fff) 8px 8px / 4px 4px no-repeat,
-      linear-gradient(#fff,#fff) 14px 14px / 6px 2px no-repeat,
-      linear-gradient(#fff,#fff) 18px 14px / 2px 6px no-repeat;
+  .ctrl-row label {
+    width: 60px;
+    font-size: 13px;
+    color: #aab;
+  }
+  .ctrl-row .val {
+    width: 50px;
+    text-align: right;
+    font-weight: 700;
+    color: #4cc1ff;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: #4cc1ff;
+  }
+  .fire-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  button.fire {
+    flex: 1;
+    background: #e94e1b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.fire:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.fire:active:not(:disabled) { background: #c63e10; }
+  button.reset {
+    background: #2a2f36;
+    color: #ddd;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
   }
 
-  /* Modal */
-  .modal-backdrop {
+  .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.7);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 50;
-    padding: 20px;
+    z-index: 10;
   }
-  .modal-backdrop.show { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: 14px;
-    padding: 22px;
-    width: 100%;
-    max-width: 320px;
-    max-height: 90vh;
-    overflow-y: auto;
+  .overlay.show { display: flex; }
+  .overlay .panel {
+    background: #1b1f24;
+    border: 1px solid #2a2f36;
+    border-radius: 12px;
+    padding: 24px 28px;
     text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    max-width: 300px;
   }
-  .dt-input {
-    width: 100%;
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #d0d4d8;
-    border-radius: 6px;
-    background: #fff;
-    color: #2b2b2b;
-  }
-  .modal h3 {
-    margin: 0 0 14px;
-    font-size: 18px;
-    color: #2b2b2b;
-  }
-  #qrcode {
-    display: flex;
-    justify-content: center;
-    margin: 10px auto 14px;
-  }
-  #qrcode img, #qrcode canvas {
-    display: block;
-    margin: 0 auto;
-  }
-  .qr-text {
-    font-size: 12px;
-    color: #555;
-    word-break: break-all;
-    background: #f5f6f8;
-    padding: 8px;
-    border-radius: 6px;
-    margin-bottom: 14px;
-  }
-  .modal button.close {
-    background: #f29032;
-    color: #fff;
+  .overlay h2 { margin: 0 0 8px; font-size: 22px; }
+  .overlay p { margin: 0 0 16px; color: #bbb; font-size: 14px; }
+  .overlay button {
+    background: #4cc1ff;
+    color: #14181d;
     border: none;
     border-radius: 8px;
-    padding: 10px 24px;
+    padding: 10px 22px;
     font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .modal label {
-    display: block;
-    text-align: left;
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 6px;
-  }
-  .modal input[type="range"] { width: 100%; }
-  .modal .value {
-    font-size: 28px;
-    color: #2ea043;
     font-weight: 700;
-    margin: 8px 0 14px;
-  }
-  .modal .actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .modal .actions button {
-    flex: 1;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
     cursor: pointer;
-  }
-  .btn-cancel { background: #eef0f2; color: #444; }
-  .btn-ok { background: #2ea043; color: #fff; }
-
-  .time-inputs {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 6px 0 4px;
-  }
-  .time-inputs input {
-    width: 60px;
-    padding: 8px;
-    font-size: 18px;
-    font-weight: 600;
-    text-align: center;
-    border: 1px solid #d0d4d8;
-    border-radius: 6px;
-    color: #2ea043;
-    background: #fff;
-    -moz-appearance: textfield;
-  }
-  .time-inputs input::-webkit-outer-spin-button,
-  .time-inputs input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .time-inputs span {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2ea043;
   }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <button class="back" id="backBtn" aria-label="Back">&#x2190;</button>
-    <div class="logo">
-      <div class="logo-circle"></div>
-      <div>
-        <div class="logo-text">Rijeka</div>
-        <div class="logo-text">CityCard</div>
-        <div class="logo-text">mobility</div>
-      </div>
+<div class="game">
+  <div class="hud">
+    <div class="side p1">
+      <div class="name">YOU</div>
+      <div class="hp-wrap"><div class="hp-bar" id="hpP1"></div></div>
+    </div>
+    <div class="side p2 right">
+      <div class="name">CPU</div>
+      <div class="hp-wrap"><div class="hp-bar" id="hpP2"></div></div>
     </div>
   </div>
+  <div class="turn-indicator" id="turnIndicator">Your turn — aim and fire!</div>
 
-  <div class="title">Pon - Pet</div>
+  <canvas id="game"></canvas>
 
-  <div class="timer-label">Vrijeme do isteka karte</div>
-  <div class="timer" id="timer">50:50:23</div>
-
-  <div class="progress-wrap">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-
-  <div class="info">
-    <div class="info-row"><span class="k">Kupljena</span><span class="v" id="dateKupljena">24.05.2026. 20:43</span></div>
-    <div class="info-row"><span class="k">Aktivirana</span><span class="v" id="dateAktivirana">25.05.2026. 06:33</span></div>
-    <div class="info-row"><span class="k">Vrijedi do</span><span class="v" id="dateVrijediDo">30.05.2026. 00:00</span></div>
-  </div>
-
-  <div class="zones-label">Uključene zone:</div>
-  <div class="zones">
-    <div class="zone">Zona 1.</div>
-    <div class="zone">Zona 2.</div>
-    <div class="zone">Zona 3.</div>
-    <div class="zone">Zona 4.</div>
-  </div>
-
-  <div class="spacer"></div>
-
-  <div class="banner">
-    <div class="banner-orange"></div>
-    <div class="banner-blue"></div>
-    <div class="banner-time" id="bannerTime">21:09:36</div>
-    <div class="banner-brand">Autotrolej</div>
-  </div>
-
-  <button class="qr-button" id="qrBtn">
-    <span class="qr-icon"></span>
-    Pokaži kontroli
-  </button>
-</div>
-
-<div class="modal-backdrop" id="qrModal">
-  <div class="modal">
-    <h3>Karta - QR kontrola</h3>
-    <div id="qrcode"></div>
-    <div class="qr-text" id="qrText"></div>
-    <button class="close" id="qrClose">Zatvori</button>
+  <div class="controls">
+    <div class="ctrl-row">
+      <label>Angle</label>
+      <input type="range" id="angle" min="0" max="180" value="45" />
+      <div class="val"><span id="angleVal">45</span>°</div>
+    </div>
+    <div class="ctrl-row">
+      <label>Power</label>
+      <input type="range" id="power" min="10" max="100" value="60" />
+      <div class="val"><span id="powerVal">60</span></div>
+    </div>
+    <div class="fire-row">
+      <button class="fire" id="fireBtn">FIRE</button>
+      <button class="reset" id="resetBtn">↻</button>
+    </div>
   </div>
 </div>
 
-<div class="modal-backdrop" id="progressModal">
-  <div class="modal">
-    <h3>Postavi karticu</h3>
-
-    <label>Napredak: <span id="progressValue">35</span>%</label>
-    <input type="range" id="progressRange" min="0" max="100" value="35" />
-
-    <label style="margin-top:14px">Vrijeme do isteka</label>
-    <div class="time-inputs">
-      <input type="number" id="hoursInput" min="0" max="999" value="50" />
-      <span>:</span>
-      <input type="number" id="minutesInput" min="0" max="59" value="50" />
-      <span>:</span>
-      <input type="number" id="secondsInput" min="0" max="59" value="23" />
-    </div>
-
-    <label style="margin-top:14px">Kupljena</label>
-    <input type="datetime-local" id="kupljenaInput" class="dt-input" />
-
-    <label style="margin-top:10px">Aktivirana</label>
-    <input type="datetime-local" id="aktiviranaInput" class="dt-input" />
-
-    <label style="margin-top:10px">Vrijedi do</label>
-    <input type="datetime-local" id="vrijediDoInput" class="dt-input" />
-
-    <div class="actions">
-      <button class="btn-cancel" id="progressCancel">Odustani</button>
-      <button class="btn-ok" id="progressOk">U redu</button>
-    </div>
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <h2 id="overlayTitle">Victory!</h2>
+    <p id="overlayMsg">You defeated the CPU.</p>
+    <button id="overlayBtn">Play again</button>
   </div>
 </div>
 
 <script>
-  // Countdown timer
-  let totalSeconds = 50 * 3600 + 50 * 60 + 23;
-  const timerEl = document.getElementById('timer');
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function renderTimer() {
-    if (totalSeconds < 0) totalSeconds = 0;
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    timerEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const angleInput = document.getElementById('angle');
+  const powerInput = document.getElementById('power');
+  const angleVal = document.getElementById('angleVal');
+  const powerVal = document.getElementById('powerVal');
+  const fireBtn = document.getElementById('fireBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const hpP1 = document.getElementById('hpP1');
+  const hpP2 = document.getElementById('hpP2');
+  const turnIndicator = document.getElementById('turnIndicator');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayMsg = document.getElementById('overlayMsg');
+  const overlayBtn = document.getElementById('overlayBtn');
+
+  let W = 0, H = 0;
+  const GRAVITY = 220; // px/s^2
+  const TANK_W = 30, TANK_H = 14;
+  const BARREL_LEN = 18;
+
+  let terrain = [];
+  let tanks = [];
+  let projectile = null;
+  let particles = [];
+  let turn = 0; // 0 = player, 1 = cpu
+  let busy = false;
+  let lastT = 0;
+  let gameOver = false;
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (terrain.length === 0) generateTerrain();
+    placeTanks();
   }
-  renderTimer();
-  setInterval(() => { if (totalSeconds > 0) { totalSeconds--; renderTimer(); } }, 1000);
 
-  // Live banner clock
-  const bannerTime = document.getElementById('bannerTime');
-  function tickClock() {
-    const d = new Date();
-    bannerTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  }
-  tickClock();
-  setInterval(tickClock, 1000);
-
-  // QR modal
-  const qrBtn = document.getElementById('qrBtn');
-  const qrModal = document.getElementById('qrModal');
-  const qrClose = document.getElementById('qrClose');
-  const qrTextEl = document.getElementById('qrText');
-  const qrContainer = document.getElementById('qrcode');
-
-  function randomText(len = 24) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let out = '';
-    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-    return out;
+  function generateTerrain() {
+    terrain = new Array(Math.ceil(W) + 1);
+    // Smooth hilly terrain via layered sines + random offset
+    const base = H * 0.72;
+    const seed = Math.random() * 1000;
+    for (let x = 0; x <= W; x++) {
+      const n =
+        Math.sin((x + seed) * 0.013) * 28 +
+        Math.sin((x + seed) * 0.031) * 14 +
+        Math.sin((x + seed) * 0.07) * 6;
+      terrain[x] = Math.min(H - 20, Math.max(H * 0.45, base + n));
+    }
   }
 
-  qrBtn.addEventListener('click', () => {
-    const text = 'RJK-' + randomText(20);
-    qrContainer.innerHTML = '';
-    new QRCode(qrContainer, {
-      text: text,
-      width: 200,
-      height: 200,
-      colorDark: '#000',
-      colorLight: '#fff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-    qrTextEl.textContent = text;
-    qrModal.classList.add('show');
+  function terrainAt(x) {
+    const xi = Math.max(0, Math.min(terrain.length - 1, Math.round(x)));
+    return terrain[xi];
+  }
+
+  function placeTanks() {
+    const x1 = Math.round(W * 0.12);
+    const x2 = Math.round(W * 0.88);
+    tanks = [
+      { x: x1, y: terrainAt(x1), hp: 100, color: '#4cc1ff', barrel: '#2a8fc7' },
+      { x: x2, y: terrainAt(x2), hp: 100, color: '#ff7a59', barrel: '#c63e10' }
+    ];
+  }
+
+  function flattenTerrainAt(cx, radius) {
+    const y = terrainAt(cx);
+    for (let x = Math.max(0, cx - radius); x <= Math.min(terrain.length - 1, cx + radius); x++) {
+      terrain[x] = Math.max(terrain[x], y);
+    }
+  }
+
+  function carveCrater(cx, cy, r) {
+    for (let x = Math.max(0, Math.round(cx - r)); x <= Math.min(terrain.length - 1, Math.round(cx + r)); x++) {
+      const dx = x - cx;
+      const dy = Math.sqrt(Math.max(0, r * r - dx * dx));
+      const top = cy + dy * 0.6;
+      if (top > terrain[x]) {
+        terrain[x] = Math.min(H - 5, top);
+      }
+    }
+    // Re-seat tanks on new ground
+    tanks.forEach(t => { t.y = terrainAt(t.x); });
+  }
+
+  function drawSky() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#5fb3ff');
+    grad.addColorStop(1, '#a3d5ff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawTerrain() {
+    ctx.fillStyle = '#5a8a3c';
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x <= W; x++) ctx.lineTo(x, terrain[x]);
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Grass cap
+    ctx.strokeStyle = '#7fbf52';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) {
+      if (x === 0) ctx.moveTo(x, terrain[x]);
+      else ctx.lineTo(x, terrain[x]);
+    }
+    ctx.stroke();
+  }
+
+  function drawTank(t, aimAngleDeg, isPlayer) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    // Treads
+    ctx.fillStyle = '#222';
+    ctx.fillRect(-TANK_W / 2, -TANK_H, TANK_W, TANK_H);
+    // Body
+    ctx.fillStyle = t.color;
+    ctx.fillRect(-TANK_W / 2 + 2, -TANK_H - 6, TANK_W - 4, 8);
+    // Turret
+    ctx.fillStyle = t.barrel;
+    ctx.beginPath();
+    ctx.arc(0, -TANK_H - 6, 6, Math.PI, 0);
+    ctx.fill();
+    // Barrel
+    const a = (aimAngleDeg * Math.PI) / 180;
+    // For player (left tank): angle 0 = right, 90 = up, 180 = left
+    // For CPU (right tank): mirror so its barrel points left at high angles
+    const dir = isPlayer ? 1 : -1;
+    const bx = Math.cos(a) * BARREL_LEN * dir;
+    const by = -Math.sin(a) * BARREL_LEN;
+    ctx.strokeStyle = t.barrel;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, -TANK_H - 6);
+    ctx.lineTo(bx, -TANK_H - 6 + by);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawProjectile() {
+    if (!projectile) return;
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawHud() {
+    hpP1.style.width = Math.max(0, tanks[0].hp) + '%';
+    hpP2.style.width = Math.max(0, tanks[1].hp) + '%';
+    hpP1.style.background = tanks[0].hp > 40 ? '#4caf50' : tanks[0].hp > 15 ? '#ffb300' : '#e53935';
+    hpP2.style.background = tanks[1].hp > 40 ? '#4caf50' : tanks[1].hp > 15 ? '#ffb300' : '#e53935';
+  }
+
+  function render() {
+    drawSky();
+    drawTerrain();
+    const playerAngle = turn === 0 && !busy ? parseInt(angleInput.value, 10) : (tanks[0].lastAngle || 45);
+    const cpuAngle = tanks[1].lastAngle || 135;
+    drawTank(tanks[0], playerAngle, true);
+    drawTank(tanks[1], cpuAngle, false);
+    drawProjectile();
+    drawParticles();
+    drawHud();
+  }
+
+  function spawnExplosion(x, y) {
+    for (let i = 0; i < 24; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 40 + Math.random() * 120;
+      particles.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 30,
+        r: 2 + Math.random() * 3,
+        color: ['#ff5722', '#ffb300', '#ffd54f', '#666'][Math.floor(Math.random() * 4)],
+        life: 1
+      });
+    }
+  }
+
+  function fire(shooterIdx, angleDeg, power) {
+    if (busy || gameOver) return;
+    busy = true;
+    fireBtn.disabled = true;
+    const shooter = tanks[shooterIdx];
+    shooter.lastAngle = angleDeg;
+    const dir = shooterIdx === 0 ? 1 : -1;
+    const a = (angleDeg * Math.PI) / 180;
+    const speed = power * 4.2; // tune
+    const muzzleX = shooter.x + Math.cos(a) * BARREL_LEN * dir;
+    const muzzleY = shooter.y - TANK_H - 6 - Math.sin(a) * BARREL_LEN;
+    projectile = {
+      x: muzzleX,
+      y: muzzleY,
+      vx: Math.cos(a) * speed * dir,
+      vy: -Math.sin(a) * speed,
+      shooter: shooterIdx
+    };
+  }
+
+  function step(dt) {
+    // Projectile physics
+    if (projectile) {
+      projectile.vy += GRAVITY * dt;
+      projectile.x += projectile.vx * dt;
+      projectile.y += projectile.vy * dt;
+
+      // Off-screen sides → fizzle
+      if (projectile.x < -50 || projectile.x > W + 50) {
+        projectile = null;
+        endTurn();
+        return;
+      }
+      // Hit ground
+      if (projectile.y >= terrainAt(projectile.x) || projectile.y > H) {
+        const hx = projectile.x, hy = projectile.y;
+        spawnExplosion(hx, hy);
+        carveCrater(hx, hy, 22);
+        applyBlast(hx, hy, 40, projectile.shooter);
+        projectile = null;
+        endTurn();
+        return;
+      }
+      // Direct hit on a tank
+      for (let i = 0; i < tanks.length; i++) {
+        if (i === projectile.shooter) continue;
+        const t = tanks[i];
+        if (
+          projectile.x > t.x - TANK_W / 2 &&
+          projectile.x < t.x + TANK_W / 2 &&
+          projectile.y > t.y - TANK_H - 12 &&
+          projectile.y < t.y
+        ) {
+          spawnExplosion(projectile.x, projectile.y);
+          applyBlast(projectile.x, projectile.y, 50, projectile.shooter);
+          projectile = null;
+          endTurn();
+          return;
+        }
+      }
+    }
+
+    // Particles
+    for (const p of particles) {
+      p.vy += GRAVITY * dt * 0.4;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt * 1.4;
+    }
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function applyBlast(x, y, radius, shooterIdx) {
+    for (let i = 0; i < tanks.length; i++) {
+      const t = tanks[i];
+      const dx = x - t.x, dy = y - (t.y - TANK_H / 2 - 6);
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < radius) {
+        const dmg = Math.round((1 - d / radius) * 35) + (i !== shooterIdx ? 5 : 0);
+        t.hp = Math.max(0, t.hp - dmg);
+      }
+    }
+    checkVictory();
+  }
+
+  function checkVictory() {
+    if (gameOver) return;
+    if (tanks[0].hp <= 0 || tanks[1].hp <= 0) {
+      gameOver = true;
+      busy = true;
+      fireBtn.disabled = true;
+      const playerWon = tanks[1].hp <= 0 && tanks[0].hp > 0;
+      const draw = tanks[0].hp <= 0 && tanks[1].hp <= 0;
+      overlayTitle.textContent = draw ? 'Draw!' : playerWon ? 'Victory!' : 'Defeat';
+      overlayMsg.textContent = draw
+        ? 'Both tanks destroyed.'
+        : playerWon ? 'You defeated the CPU.' : 'The CPU destroyed your tank.';
+      overlay.classList.add('show');
+    }
+  }
+
+  function endTurn() {
+    if (gameOver) return;
+    turn = 1 - turn;
+    busy = false;
+    if (turn === 0) {
+      fireBtn.disabled = false;
+      turnIndicator.textContent = 'Your turn — aim and fire!';
+    } else {
+      fireBtn.disabled = true;
+      turnIndicator.textContent = 'CPU is thinking…';
+      setTimeout(cpuTurn, 700);
+    }
+  }
+
+  function cpuTurn() {
+    if (gameOver) return;
+    // Simple AI: aim toward player with some randomness, vary power based on distance
+    const dx = tanks[0].x - tanks[1].x; // negative (player is left)
+    const dist = Math.abs(dx);
+    // base angle ~ 135° (pointing upper-left from CPU's frame: drawTank mirrors with dir=-1)
+    let angle = 45 + Math.random() * 20; // CPU uses 0-180 same scale; barrel direction handled by dir flip
+    // Map to "world" angle: shoot up-left. With dir=-1 mirror, angle 45 means up-left
+    let power = Math.min(100, 40 + dist * 0.10 + (Math.random() * 10 - 5));
+    // Add occasional miss
+    angle += (Math.random() * 16 - 8);
+    fire(1, angle, power);
+  }
+
+  function loop(t) {
+    const dt = Math.min(0.033, (t - lastT) / 1000 || 0);
+    lastT = t;
+    step(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function reset() {
+    overlay.classList.remove('show');
+    gameOver = false;
+    busy = false;
+    projectile = null;
+    particles = [];
+    turn = 0;
+    generateTerrain();
+    placeTanks();
+    fireBtn.disabled = false;
+    turnIndicator.textContent = 'Your turn — aim and fire!';
+  }
+
+  // Input wiring
+  angleInput.addEventListener('input', () => { angleVal.textContent = angleInput.value; });
+  powerInput.addEventListener('input', () => { powerVal.textContent = powerInput.value; });
+  fireBtn.addEventListener('click', () => {
+    if (turn !== 0 || busy || gameOver) return;
+    fire(0, parseInt(angleInput.value, 10), parseInt(powerInput.value, 10));
   });
-  qrClose.addEventListener('click', () => qrModal.classList.remove('show'));
-  qrModal.addEventListener('click', (e) => { if (e.target === qrModal) qrModal.classList.remove('show'); });
+  resetBtn.addEventListener('click', reset);
+  overlayBtn.addEventListener('click', reset);
 
-  // Edit modal
-  const backBtn = document.getElementById('backBtn');
-  const progressModal = document.getElementById('progressModal');
-  const progressRange = document.getElementById('progressRange');
-  const progressValue = document.getElementById('progressValue');
-  const progressBar = document.getElementById('progressBar');
-  const progressOk = document.getElementById('progressOk');
-  const progressCancel = document.getElementById('progressCancel');
-  const hoursInput = document.getElementById('hoursInput');
-  const minutesInput = document.getElementById('minutesInput');
-  const secondsInput = document.getElementById('secondsInput');
-  const kupljenaInput = document.getElementById('kupljenaInput');
-  const aktiviranaInput = document.getElementById('aktiviranaInput');
-  const vrijediDoInput = document.getElementById('vrijediDoInput');
-  const dateKupljena = document.getElementById('dateKupljena');
-  const dateAktivirana = document.getElementById('dateAktivirana');
-  const dateVrijediDo = document.getElementById('dateVrijediDo');
-
-  let currentProgress = 35;
-  function setProgress(p) {
-    currentProgress = p;
-    progressBar.style.width = p + '%';
-  }
-  setProgress(currentProgress);
-
-  // Date model: keep Date objects, format for display as "dd.MM.yyyy. HH:mm"
-  const dates = {
-    kupljena: new Date(2026, 4, 24, 20, 43),
-    aktivirana: new Date(2026, 4, 25, 6, 33),
-    vrijediDo: new Date(2026, 4, 30, 0, 0)
-  };
-  function formatDisplay(d) {
-    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}. ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  function toLocalInput(d) {
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  function fromLocalInput(s) {
-    const [datePart, timePart] = s.split('T');
-    const [y, mo, da] = datePart.split('-').map(Number);
-    const [h, mi] = timePart.split(':').map(Number);
-    return new Date(y, mo - 1, da, h, mi);
-  }
-  function renderDates() {
-    dateKupljena.textContent = formatDisplay(dates.kupljena);
-    dateAktivirana.textContent = formatDisplay(dates.aktivirana);
-    dateVrijediDo.textContent = formatDisplay(dates.vrijediDo);
-  }
-  renderDates();
-
-  backBtn.addEventListener('click', () => {
-    progressRange.value = currentProgress;
-    progressValue.textContent = currentProgress;
-    hoursInput.value = Math.floor(totalSeconds / 3600);
-    minutesInput.value = Math.floor((totalSeconds % 3600) / 60);
-    secondsInput.value = totalSeconds % 60;
-    kupljenaInput.value = toLocalInput(dates.kupljena);
-    aktiviranaInput.value = toLocalInput(dates.aktivirana);
-    vrijediDoInput.value = toLocalInput(dates.vrijediDo);
-    progressModal.classList.add('show');
-  });
-  progressRange.addEventListener('input', () => {
-    progressValue.textContent = progressRange.value;
-  });
-  progressOk.addEventListener('click', () => {
-    setProgress(parseInt(progressRange.value, 10));
-    const h = Math.max(0, parseInt(hoursInput.value, 10) || 0);
-    const m = Math.min(59, Math.max(0, parseInt(minutesInput.value, 10) || 0));
-    const s = Math.min(59, Math.max(0, parseInt(secondsInput.value, 10) || 0));
-    totalSeconds = h * 3600 + m * 60 + s;
-    renderTimer();
-    if (kupljenaInput.value) dates.kupljena = fromLocalInput(kupljenaInput.value);
-    if (aktiviranaInput.value) dates.aktivirana = fromLocalInput(aktiviranaInput.value);
-    if (vrijediDoInput.value) dates.vrijediDo = fromLocalInput(vrijediDoInput.value);
-    renderDates();
-    progressModal.classList.remove('show');
-  });
-  progressCancel.addEventListener('click', () => progressModal.classList.remove('show'));
-  progressModal.addEventListener('click', (e) => { if (e.target === progressModal) progressModal.classList.remove('show'); });
+  window.addEventListener('resize', resize);
+  resize();
+  reset();
+  requestAnimationFrame(loop);
+})();
 </script>
 </body>
 </html>
