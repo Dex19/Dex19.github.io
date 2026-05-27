@@ -1,15 +1,518 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
 <head>
-    <meta charset="UTF-8">
-    <title>Snake Game</title>
-    <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
-        canvas { background-color: #000; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Rijeka CityCard mobility</title>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #fff;
+    color: #222;
+    overflow: hidden;
+  }
+  .app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+
+  /* Header */
+  .header {
+    position: relative;
+    padding: 14px 16px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #777;
+    font-size: 22px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #9aa1a8;
+    font-size: 12px;
+    line-height: 1.05;
+  }
+  .logo-circle {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #b4bac0;
+    position: relative;
+  }
+  .logo-circle::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px; height: 6px;
+    background: #b4bac0;
+    border-radius: 50%;
+  }
+  .logo-text { font-weight: 500; }
+
+  .title {
+    text-align: center;
+    font-size: 26px;
+    color: #2b2b2b;
+    margin: 14px 0 18px;
+    font-weight: 500;
+  }
+
+  .timer-label {
+    text-align: center;
+    color: #8a8f95;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .timer {
+    text-align: center;
+    color: #2ea043;
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .progress-wrap {
+    margin: 14px 16px 0;
+    height: 5px;
+    background: #eef0f2;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 35%;
+    background: #2ea043;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  .info {
+    margin: 18px 16px 0;
+    border-bottom: 1px solid #e6e8eb;
+    padding-bottom: 14px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 4px 0;
+  }
+  .info-row .k { color: #8a8f95; }
+  .info-row .v { color: #2b2b2b; font-weight: 500; }
+
+  .zones-label {
+    margin: 16px 16px 10px;
+    color: #8a8f95;
+    font-size: 14px;
+  }
+  .zones {
+    display: flex;
+    gap: 10px;
+    margin: 0 16px;
+    flex-wrap: wrap;
+  }
+  .zone {
+    background: #f29032;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  }
+
+  .spacer { flex: 1; }
+
+  /* Bottom banner */
+  .banner {
+    position: relative;
+    height: 90px;
+    margin: 0 0 8px;
+    overflow: hidden;
+  }
+  .banner-orange {
+    position: absolute;
+    inset: 0;
+    background: #f29032;
+    clip-path: polygon(0 0, 60% 0, 40% 100%, 0 100%);
+  }
+  .banner-blue {
+    position: absolute;
+    inset: 0;
+    background: #2bb6e0;
+    clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
+  }
+  .banner-time {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 18px;
+    letter-spacing: 1px;
+  }
+  .banner-brand {
+    position: absolute;
+    right: 14px; bottom: 8px;
+    color: #fff;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+  }
+
+  .qr-button {
+    margin: 0;
+    border: none;
+    background: #f29032;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 16px;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .qr-button:active { background: #d97c1f; }
+  .qr-icon {
+    width: 20px; height: 20px;
+    display: inline-block;
+    background:
+      linear-gradient(#fff,#fff) 0 0 / 6px 6px no-repeat,
+      linear-gradient(#fff,#fff) 14px 0 / 6px 6px no-repeat,
+      linear-gradient(#fff,#fff) 0 14px / 6px 6px no-repeat,
+      linear-gradient(#fff,#fff) 8px 8px / 4px 4px no-repeat,
+      linear-gradient(#fff,#fff) 14px 14px / 6px 2px no-repeat,
+      linear-gradient(#fff,#fff) 18px 14px / 2px 6px no-repeat;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    color: #2b2b2b;
+  }
+  #qrcode {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto 14px;
+  }
+  #qrcode img, #qrcode canvas {
+    display: block;
+    margin: 0 auto;
+  }
+  .qr-text {
+    font-size: 12px;
+    color: #555;
+    word-break: break-all;
+    background: #f5f6f8;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+  }
+  .modal button.close {
+    background: #f29032;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .modal label {
+    display: block;
+    text-align: left;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .modal input[type="range"] { width: 100%; }
+  .modal .value {
+    font-size: 28px;
+    color: #2ea043;
+    font-weight: 700;
+    margin: 8px 0 14px;
+  }
+  .modal .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .modal .actions button {
+    flex: 1;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-cancel { background: #eef0f2; color: #444; }
+  .btn-ok { background: #2ea043; color: #fff; }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 6px 0 4px;
+  }
+  .time-inputs input {
+    width: 60px;
+    padding: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid #d0d4d8;
+    border-radius: 6px;
+    color: #2ea043;
+    background: #fff;
+    -moz-appearance: textfield;
+  }
+  .time-inputs input::-webkit-outer-spin-button,
+  .time-inputs input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .time-inputs span {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2ea043;
+  }
+</style>
 </head>
 <body>
-<canvas id="snakeGame" width="400" height="400"></canvas>
-<script src="snake.js"></script>
+<div class="app">
+  <div class="header">
+    <button class="back" id="backBtn" aria-label="Back">&#x2190;</button>
+    <div class="logo">
+      <div class="logo-circle"></div>
+      <div>
+        <div class="logo-text">Rijeka</div>
+        <div class="logo-text">CityCard</div>
+        <div class="logo-text">mobility</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="title">Pon - Pet</div>
+
+  <div class="timer-label">Vrijeme do isteka karte</div>
+  <div class="timer" id="timer">50:50:23</div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="info">
+    <div class="info-row"><span class="k">Kupljena</span><span class="v">24.05.2026. 20:43</span></div>
+    <div class="info-row"><span class="k">Aktivirana</span><span class="v">25.05.2026. 06:33</span></div>
+    <div class="info-row"><span class="k">Vrijedi do</span><span class="v">30.05.2026. 00:00</span></div>
+  </div>
+
+  <div class="zones-label">Uključene zone:</div>
+  <div class="zones">
+    <div class="zone">Zona 1.</div>
+    <div class="zone">Zona 2.</div>
+    <div class="zone">Zona 3.</div>
+    <div class="zone">Zona 4.</div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="banner">
+    <div class="banner-orange"></div>
+    <div class="banner-blue"></div>
+    <div class="banner-time" id="bannerTime">21:09:36</div>
+    <div class="banner-brand">Autotrolej</div>
+  </div>
+
+  <button class="qr-button" id="qrBtn">
+    <span class="qr-icon"></span>
+    Pokaži kontroli
+  </button>
+</div>
+
+<div class="modal-backdrop" id="qrModal">
+  <div class="modal">
+    <h3>Karta - QR kontrola</h3>
+    <div id="qrcode"></div>
+    <div class="qr-text" id="qrText"></div>
+    <button class="close" id="qrClose">Zatvori</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="progressModal">
+  <div class="modal">
+    <h3>Postavi karticu</h3>
+
+    <label>Napredak: <span id="progressValue">35</span>%</label>
+    <input type="range" id="progressRange" min="0" max="100" value="35" />
+
+    <label style="margin-top:14px">Vrijeme do isteka</label>
+    <div class="time-inputs">
+      <input type="number" id="hoursInput" min="0" max="999" value="50" />
+      <span>:</span>
+      <input type="number" id="minutesInput" min="0" max="59" value="50" />
+      <span>:</span>
+      <input type="number" id="secondsInput" min="0" max="59" value="23" />
+    </div>
+
+    <div class="actions">
+      <button class="btn-cancel" id="progressCancel">Odustani</button>
+      <button class="btn-ok" id="progressOk">U redu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Countdown timer
+  let totalSeconds = 50 * 3600 + 50 * 60 + 23;
+  const timerEl = document.getElementById('timer');
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function renderTimer() {
+    if (totalSeconds < 0) totalSeconds = 0;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    timerEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  renderTimer();
+  setInterval(() => { totalSeconds--; renderTimer(); }, 1000);
+
+  // Live banner clock
+  const bannerTime = document.getElementById('bannerTime');
+  function tickClock() {
+    const d = new Date();
+    bannerTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // QR modal
+  const qrBtn = document.getElementById('qrBtn');
+  const qrModal = document.getElementById('qrModal');
+  const qrClose = document.getElementById('qrClose');
+  const qrTextEl = document.getElementById('qrText');
+  const qrContainer = document.getElementById('qrcode');
+
+  function randomText(len = 24) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let out = '';
+    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  }
+
+  qrBtn.addEventListener('click', () => {
+    const text = 'RJK-' + randomText(20);
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: text,
+      width: 200,
+      height: 200,
+      colorDark: '#000',
+      colorLight: '#fff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    qrTextEl.textContent = text;
+    qrModal.classList.add('show');
+  });
+  qrClose.addEventListener('click', () => qrModal.classList.remove('show'));
+  qrModal.addEventListener('click', (e) => { if (e.target === qrModal) qrModal.classList.remove('show'); });
+
+  // Progress edit modal
+  const backBtn = document.getElementById('backBtn');
+  const progressModal = document.getElementById('progressModal');
+  const progressRange = document.getElementById('progressRange');
+  const progressValue = document.getElementById('progressValue');
+  const progressBar = document.getElementById('progressBar');
+  const progressOk = document.getElementById('progressOk');
+  const progressCancel = document.getElementById('progressCancel');
+
+  let currentProgress = 35;
+  function setProgress(p) {
+    currentProgress = p;
+    progressBar.style.width = p + '%';
+  }
+  setProgress(currentProgress);
+
+  const hoursInput = document.getElementById('hoursInput');
+  const minutesInput = document.getElementById('minutesInput');
+  const secondsInput = document.getElementById('secondsInput');
+
+  backBtn.addEventListener('click', () => {
+    progressRange.value = currentProgress;
+    progressValue.textContent = currentProgress;
+    hoursInput.value = Math.floor(totalSeconds / 3600);
+    minutesInput.value = Math.floor((totalSeconds % 3600) / 60);
+    secondsInput.value = totalSeconds % 60;
+    progressModal.classList.add('show');
+  });
+  progressRange.addEventListener('input', () => {
+    progressValue.textContent = progressRange.value;
+  });
+  progressOk.addEventListener('click', () => {
+    setProgress(parseInt(progressRange.value, 10));
+    const h = Math.max(0, parseInt(hoursInput.value, 10) || 0);
+    const m = Math.min(59, Math.max(0, parseInt(minutesInput.value, 10) || 0));
+    const s = Math.min(59, Math.max(0, parseInt(secondsInput.value, 10) || 0));
+    totalSeconds = h * 3600 + m * 60 + s;
+    renderTimer();
+    progressModal.classList.remove('show');
+  });
+  progressCancel.addEventListener('click', () => progressModal.classList.remove('show'));
+  progressModal.addEventListener('click', (e) => { if (e.target === progressModal) progressModal.classList.remove('show'); });
+</script>
 </body>
 </html>
