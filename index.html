@@ -130,15 +130,19 @@
   }
   .zones {
     display: flex;
-    gap: 10px;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 8px;
     margin: 0 16px;
     flex-wrap: wrap;
   }
   .zone {
+    flex: 1 1 0;
+    text-align: center;
     background: #f29032;
     color: #fff;
     border-radius: 8px;
-    padding: 8px 14px;
+    padding: 8px 4px;
     font-size: 14px;
     font-weight: 500;
     box-shadow: 0 1px 0 rgba(0,0,0,0.05);
@@ -233,8 +237,19 @@
     padding: 22px;
     width: 100%;
     max-width: 320px;
+    max-height: 90vh;
+    overflow-y: auto;
     text-align: center;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .dt-input {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #d0d4d8;
+    border-radius: 6px;
+    background: #fff;
+    color: #2b2b2b;
   }
   .modal h3 {
     margin: 0 0 14px;
@@ -356,9 +371,9 @@
   </div>
 
   <div class="info">
-    <div class="info-row"><span class="k">Kupljena</span><span class="v">24.05.2026. 20:43</span></div>
-    <div class="info-row"><span class="k">Aktivirana</span><span class="v">25.05.2026. 06:33</span></div>
-    <div class="info-row"><span class="k">Vrijedi do</span><span class="v">30.05.2026. 00:00</span></div>
+    <div class="info-row"><span class="k">Kupljena</span><span class="v" id="dateKupljena">24.05.2026. 20:43</span></div>
+    <div class="info-row"><span class="k">Aktivirana</span><span class="v" id="dateAktivirana">25.05.2026. 06:33</span></div>
+    <div class="info-row"><span class="k">Vrijedi do</span><span class="v" id="dateVrijediDo">30.05.2026. 00:00</span></div>
   </div>
 
   <div class="zones-label">Uključene zone:</div>
@@ -409,6 +424,15 @@
       <input type="number" id="secondsInput" min="0" max="59" value="23" />
     </div>
 
+    <label style="margin-top:14px">Kupljena</label>
+    <input type="datetime-local" id="kupljenaInput" class="dt-input" />
+
+    <label style="margin-top:10px">Aktivirana</label>
+    <input type="datetime-local" id="aktiviranaInput" class="dt-input" />
+
+    <label style="margin-top:10px">Vrijedi do</label>
+    <input type="datetime-local" id="vrijediDoInput" class="dt-input" />
+
     <div class="actions">
       <button class="btn-cancel" id="progressCancel">Odustani</button>
       <button class="btn-ok" id="progressOk">U redu</button>
@@ -429,7 +453,7 @@
     timerEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
   }
   renderTimer();
-  setInterval(() => { totalSeconds--; renderTimer(); }, 1000);
+  setInterval(() => { if (totalSeconds > 0) { totalSeconds--; renderTimer(); } }, 1000);
 
   // Live banner clock
   const bannerTime = document.getElementById('bannerTime');
@@ -471,7 +495,7 @@
   qrClose.addEventListener('click', () => qrModal.classList.remove('show'));
   qrModal.addEventListener('click', (e) => { if (e.target === qrModal) qrModal.classList.remove('show'); });
 
-  // Progress edit modal
+  // Edit modal
   const backBtn = document.getElementById('backBtn');
   const progressModal = document.getElementById('progressModal');
   const progressRange = document.getElementById('progressRange');
@@ -479,6 +503,15 @@
   const progressBar = document.getElementById('progressBar');
   const progressOk = document.getElementById('progressOk');
   const progressCancel = document.getElementById('progressCancel');
+  const hoursInput = document.getElementById('hoursInput');
+  const minutesInput = document.getElementById('minutesInput');
+  const secondsInput = document.getElementById('secondsInput');
+  const kupljenaInput = document.getElementById('kupljenaInput');
+  const aktiviranaInput = document.getElementById('aktiviranaInput');
+  const vrijediDoInput = document.getElementById('vrijediDoInput');
+  const dateKupljena = document.getElementById('dateKupljena');
+  const dateAktivirana = document.getElementById('dateAktivirana');
+  const dateVrijediDo = document.getElementById('dateVrijediDo');
 
   let currentProgress = 35;
   function setProgress(p) {
@@ -487,9 +520,30 @@
   }
   setProgress(currentProgress);
 
-  const hoursInput = document.getElementById('hoursInput');
-  const minutesInput = document.getElementById('minutesInput');
-  const secondsInput = document.getElementById('secondsInput');
+  // Date model: keep Date objects, format for display as "dd.MM.yyyy. HH:mm"
+  const dates = {
+    kupljena: new Date(2026, 4, 24, 20, 43),
+    aktivirana: new Date(2026, 4, 25, 6, 33),
+    vrijediDo: new Date(2026, 4, 30, 0, 0)
+  };
+  function formatDisplay(d) {
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}. ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function toLocalInput(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fromLocalInput(s) {
+    const [datePart, timePart] = s.split('T');
+    const [y, mo, da] = datePart.split('-').map(Number);
+    const [h, mi] = timePart.split(':').map(Number);
+    return new Date(y, mo - 1, da, h, mi);
+  }
+  function renderDates() {
+    dateKupljena.textContent = formatDisplay(dates.kupljena);
+    dateAktivirana.textContent = formatDisplay(dates.aktivirana);
+    dateVrijediDo.textContent = formatDisplay(dates.vrijediDo);
+  }
+  renderDates();
 
   backBtn.addEventListener('click', () => {
     progressRange.value = currentProgress;
@@ -497,6 +551,9 @@
     hoursInput.value = Math.floor(totalSeconds / 3600);
     minutesInput.value = Math.floor((totalSeconds % 3600) / 60);
     secondsInput.value = totalSeconds % 60;
+    kupljenaInput.value = toLocalInput(dates.kupljena);
+    aktiviranaInput.value = toLocalInput(dates.aktivirana);
+    vrijediDoInput.value = toLocalInput(dates.vrijediDo);
     progressModal.classList.add('show');
   });
   progressRange.addEventListener('input', () => {
@@ -509,6 +566,10 @@
     const s = Math.min(59, Math.max(0, parseInt(secondsInput.value, 10) || 0));
     totalSeconds = h * 3600 + m * 60 + s;
     renderTimer();
+    if (kupljenaInput.value) dates.kupljena = fromLocalInput(kupljenaInput.value);
+    if (aktiviranaInput.value) dates.aktivirana = fromLocalInput(aktiviranaInput.value);
+    if (vrijediDoInput.value) dates.vrijediDo = fromLocalInput(vrijediDoInput.value);
+    renderDates();
     progressModal.classList.remove('show');
   });
   progressCancel.addEventListener('click', () => progressModal.classList.remove('show'));
